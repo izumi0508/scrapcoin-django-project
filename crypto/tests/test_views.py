@@ -4,15 +4,15 @@ from ..models import CryptoCurrency
 class CryptoAPITest(TestCase):
     def setUp(self):
         CryptoCurrency.objects.create(
-            symbol='BTCUSDT',
-            price='100000.00',
-            timestamp='2026-05-01T00:00:00Z'
+            symbol = 'BTCUSDT',
+            price = '100000.00',
+            timestamp = '2026-05-01T00:00:00Z'
         )
 
         CryptoCurrency.objects.create(
-            symbol='ETHUSDT',
-            price='5000.00',
-            timestamp='2026-05-01T00:00:00Z'
+            symbol = 'ETHUSDT',
+            price = '5000.00',
+            timestamp = '2026-05-01T00:00:00Z'
         )
 
     def test_api_returns_200(self):

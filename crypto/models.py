@@ -19,4 +19,16 @@ class CryptoCurrency(models.Model):
         ]
 
     def __str__(self):
-        return f"{self.symbol} @ {self.timestamp} ${self.price}"
+        return self.symbol
+    
+
+
+class WatchList(models.Model):
+    symbol = models.CharField(max_length = 50, unique=True)
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        ordering = ["symbol"]
+
+    def __str__(self):
+        return self.symbol

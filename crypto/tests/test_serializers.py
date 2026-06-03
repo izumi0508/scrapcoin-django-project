@@ -7,9 +7,9 @@ class CryptoSerializerTest(TestCase):
     def test_serializer_fields(self):
 
         coin = CryptoCurrency.objects.create(
-            symbol='BTCUSDT',
-            price='99999.99',
-            timestamp='2026-05-01T00:00:00Z'
+            symbol = 'BTCUSDT',
+            price = '99999.99',
+            timestamp = '2026-05-01T00:00:00Z'
         )
 
         serializer = CryptoCurrencySerializer(coin)

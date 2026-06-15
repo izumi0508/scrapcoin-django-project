@@ -23,7 +23,7 @@ class Command(BaseCommand):
             if coin["symbol"] not in watchlist:
                 continue
             
-            CryptoCurrency.objects.create(
+            CryptoCurrency.objects.update_or_create(
                 symbol = coin["symbol"],
                 timestamp = now,
                 defaults = {

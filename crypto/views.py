@@ -38,8 +38,3 @@ def crypto_dashboard(request):
     }
 
     return render(request, 'crypto/index.html', context)
-    
-# # GET a single item by ID
-# class MyDetailView(generics.RetrieveAPIView):
-#     queryset = MyModel.objects.all()
-#     serializer_class = MySerializer

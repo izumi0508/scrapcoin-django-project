@@ -60,12 +60,12 @@ scrapcoin/
 
 ├── crypto/
 
-│   ├── models.py
-│   ├── views.py
-│   ├── serializers.py
-│   ├── tests/
-│   └── management/
-│       └── commands/
+│   ├── models.py<br>
+│   ├── views.py<br>
+│   ├── serializers.py<br>
+│   ├── tests/<br>
+│   └── management/<br>
+│       └── commands/  
 
 ├── requirements.txt
 

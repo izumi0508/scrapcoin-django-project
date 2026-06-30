@@ -24,15 +24,25 @@ Deployment
 ## 功能
 
 ✅ WatchList 管理
+
 ✅ 歷史K線收集
+
 ✅ REST API
+
 ✅ Filtering
+
 ✅ Ordering
+
 ✅ Serializer
+
 ✅ Model Test
+
 ✅ API Test
+
 🚧 Docker
+
 🚧 Scheduler
+
 🚧 Deployment
 
 ## API
@@ -47,30 +57,46 @@ python manage.py fetch_kline
 ## 專案結構
 
 scrapcoin/
+
 ├── crypto/
+
 │   ├── models.py
 │   ├── views.py
 │   ├── serializers.py
 │   ├── tests/
 │   └── management/
 │       └── commands/
+
 ├── requirements.txt
+
 ├── docker-compose.yml
+
 └── README.md
 
 ## 未來規劃
 
 [✓] Price API
+
 [✓] Historical Kline
+
 [✓] WatchList
+
 [✓] PostgreSQL
+
 [✓] Testing
+
 [ ] Docker
+
 [ ] Scheduler
+
 [ ] Redis Cache
+
 [ ] Celery
+
 [ ] WebSocket
+
 [ ] Deploy
+
 [ ] Frontend Dashboard
 
 ## Author

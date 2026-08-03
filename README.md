@@ -49,9 +49,16 @@ Deployment
 
 ## 如何安裝
 
-## 如何使用
 
-更新最近一筆K線
+
+## 如何使用
+建立資料表
+docker compose exec web python manage.py migrate
+
+建立管理員帳號
+docker compose exec web python manage.py createsuperuser
+
+依照WatchList更新最近一筆K線
 python manage.py fetch_kline
 
 ## 專案結構

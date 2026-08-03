@@ -81,7 +81,7 @@ DATABASES = {
         'NAME': 'scrapcoin_db',
         'USER': 'postgres',
         'PASSWORD': 'root',
-        'HOST': 'localhost',
+        'HOST': 'db',
         'PORT': '5432',
     }
 }

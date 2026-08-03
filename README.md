@@ -61,6 +61,9 @@ docker compose exec web python manage.py createsuperuser
 依照WatchList更新最近一筆K線
 python manage.py fetch_kline
 
+跑測試
+docker compose exec web python manage.py test
+
 ## 專案結構
 
 scrapcoin/

@@ -58,8 +58,11 @@ docker compose exec web python manage.py migrate
 建立管理員帳號
 docker compose exec web python manage.py createsuperuser
 
+初始化WatchList
+docker compose exec web python manage.py seed_watchlist
+
 依照WatchList更新最近一筆K線
-python manage.py fetch_kline
+docker compose exec web python manage.py fetch_kline
 
 跑測試
 docker compose exec web python manage.py test

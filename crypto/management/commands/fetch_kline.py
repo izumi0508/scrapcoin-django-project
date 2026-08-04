@@ -6,7 +6,7 @@ from datetime import datetime
 from datetime import datetime, timezone
 
 class Command(BaseCommand):
-    help = 'Fetch new Crypto history kline datas from Binance to the database'
+    help = 'Fetch new Crypto history kline data from Binance.'
 
     def handle(self, *args, **kwargs):
         DEBUG = False
@@ -62,6 +62,6 @@ class Command(BaseCommand):
             )
         
         self.stdout.write(self.style.SUCCESS(
-            'Successfully fetch new Crypto history datas to the database'
+            'Successfully fetch Crypto kline.'
         ))
 

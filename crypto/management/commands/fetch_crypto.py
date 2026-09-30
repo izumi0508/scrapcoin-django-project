@@ -9,7 +9,18 @@ class Command(BaseCommand):
 
     def handle(self, *args, **kwargs):
         url = 'https://api.binance.com/api/v3/ticker/price'
-        response = requests.get(url)
+
+        try:
+            response = requests.get(url,timeout=5)
+            response.raise_for_status()
+
+        except requests.exceptions.RequestException as e:
+            self.stdout.write(
+                self.style.ERROR(
+                    f"{coin} | {e}"
+                )
+            )
+        
         data = response.json()
         now = timezone.now()
 

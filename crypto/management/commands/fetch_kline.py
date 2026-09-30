@@ -24,7 +24,19 @@ class Command(BaseCommand):
         for coin in watchlist:
             
             url = f'https://api.binance.com/api/v3/klines?symbol={coin}&interval={setinterval}&limit=1'
-            response = requests.get(url)
+
+            try:
+                response = requests.get(url,timeout=5)
+                response.raise_for_status()
+
+            except requests.exceptions.RequestException as e:
+                self.stdout.write(
+                    self.style.ERROR(
+                        f"{coin} | {e}"
+                    )
+                )
+                continue
+
             data = response.json()
 
             if not data:

@@ -2,11 +2,11 @@ from .base import *
 
 DEBUG = True
 
-INSTALLED_APPS += [
-    'debug_toolbar',
-]
+# INSTALLED_APPS += [
+#     'debug_toolbar',
+# ]
 
-MIDDLEWARE += ['debug_toolbar.middleware.DebugToolbarMiddleware', ]
+# MIDDLEWARE += ['debug_toolbar.middleware.DebugToolbarMiddleware', ]
 
 DATABASES = {
     'default': {

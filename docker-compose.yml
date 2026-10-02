@@ -6,13 +6,17 @@ services:
     environment:
       POSTGRES_DB: scrapcoin_db
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: root
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
 
     ports:
       - "5432:5432"
 
   web:
     build: .
+
+    environment:
+      SECRET_KEY: ${SECRET_KEY}
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
 
     command: python manage.py runserver 0.0.0.0:8000
 

@@ -13,7 +13,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'scrapcoin_db',
         'USER': 'postgres',
-        'PASSWORD': 'root',
+        'PASSWORD': os.getenv("DB_PASSWORD"),
         'HOST': 'db',
         'PORT': '5432',
     }

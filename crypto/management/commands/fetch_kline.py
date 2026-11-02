@@ -2,7 +2,6 @@ import requests
 from decimal import Decimal
 from django.core.management.base import BaseCommand
 from crypto.models import CryptoKline, WatchList
-from datetime import datetime
 from datetime import datetime, timezone
 
 class Command(BaseCommand):

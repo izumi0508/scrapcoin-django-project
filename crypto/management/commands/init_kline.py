@@ -27,6 +27,17 @@ class Command(BaseCommand):
 
             try:
                 response = requests.get(url,timeout=5)
+
+                if response.status_code in [418, 429]:
+                    self.stdout.write(
+                        self.style.ERROR(
+                            f"Status: {response.status_code}, "
+                            f"Retry-After: {response.headers.get('Retry-After')}, "
+                            f"Used Weight: {response.headers.get('X-MBX-USED-WEIGHT-1M')}"
+                        )
+                    )
+                    break
+                
                 response.raise_for_status()
 
             except requests.exceptions.RequestException as e:

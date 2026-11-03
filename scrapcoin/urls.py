@@ -16,8 +16,12 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from crypto import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    # API
     path('api/v1/', include('crypto.urls')),
+    # Frontend
+    path('dashboard/', views.crypto_dashboard, name='crypto-dashboard'),
 ]

@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chart.js 走勢圖簡單範例</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <h1>虛擬貨幣清單Chart.js</h1>
+
+    <select id="datasetSelector" onchange="updateChartData()">
+        <option value="BTCUSD">BTCUSD</option>
+        <option value="ETHUSD">ETHUSD</option>
+        <option value="USDTUSD">USDTUSD</option>
+        <option value="BNBUSD">BNBUSD</option>
+        <option value="SOLUSD">SOLUSD</option>
+        <option value="USDCUSD">USDCUSD</option>
+    </select>
+
+    <div style="width: 80%; margin: auto;">
+        <!-- 建立繪圖用的 Canvas -->
+        <canvas id="cryptoChart"></canvas>
+    </div>
+
+    <script>
+        const ctx = document.getElementById('cryptoChart').getContext('2d');
+
+        // 初始化圖表設定
+        const myChart = new Chart(ctx, {
+            type: 'line', // 設定為折線圖 (走勢圖)
+            data: {
+                labels: [], // 先設為空，等待 API 傳入
+                datasets: [{
+                    label: '價格走勢',
+                    data: [],
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                    borderWidth: 2,
+                    fill: true // 填滿曲線下方
+                }]
+            },
+            options: {
+                responsive: true
+            }
+        });
+
+        function updateChartData() {
+            const selected = document.getElementById('datasetSelector').value;
+            fetch(`/api/v1/cryptos/?symbol=${selected}`)
+                .then(response => response.json())
+                .then(data => {
+
+                    const labels = data.map(item => item.timestamp);
+                    const values = data.map(item => item.price);
+
+                    // 更新圖表的標籤與資料
+                    myChart.data.labels = labels;
+                    myChart.data.datasets[0].data = values;
+                    myChart.update(); // 重新繪製圖表
+                })
+                .catch(error => console.error('Error:', error));
+        }
+    </script>
+
+</body>
+</html>

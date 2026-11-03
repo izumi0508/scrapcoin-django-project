@@ -4,6 +4,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import generics
 from rest_framework.filters import OrderingFilter
 from .serializers import CryptoCurrencySerializer,CryptoKlineSerializer
+from django.shortcuts import render
 
 # Create your views here.
 # GET all items
@@ -34,7 +35,7 @@ class CryptoKlineListView(generics.ListAPIView):
 def crypto_dashboard(request):
 
     context = {
-        'crypto_list': CryptoCurrency.objects.all()
+        'crypto_list': CryptoKline.objects.all()
     }
 
     return render(request, 'crypto/index.html', context)

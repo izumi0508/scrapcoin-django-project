@@ -40,6 +40,7 @@
 
     .coin-list {
         overflow-y: auto;
+        flex: 1;
     }
 
     .coin-item {
@@ -49,6 +50,7 @@
         padding: 15px 18px;
         cursor: pointer;
         border-bottom: 1px solid #2a2e39;
+        transition: background 0.15s;
     }
 
     .coin-item:hover {
@@ -58,6 +60,7 @@
     .coin-item.active {
         background: #2a2e39;
         border-left: 3px solid #2962ff;
+        padding-left: 15px;
     }
 
     .coin-symbol {
@@ -131,6 +134,10 @@
             padding: 12px 8px;
         }
 
+        .coin-item.active {
+            padding-left: 5px;
+        }
+
         .topbar {
             font-size: 16px;
         }
@@ -177,25 +184,36 @@
 
 {% block extra_js %}
 
-<!-- TradingView Lightweight Charts -->
 <script src="https://unpkg.com/lightweight-charts@4.2.0/dist/lightweight-charts.standalone.production.js"></script>
 
 <script>
 
+    // ==========================================
+    // 基本設定
+    // ==========================================
+
     const API_URL = "/api/v1/klines/";
+    const INTERVAL = "1d";
 
     let allKlines = [];
+    let coinData = {};
+
     let chart = null;
     let candleSeries = null;
+
     let selectedSymbol = null;
 
 
-    // 建立 K 線圖
+    // ==========================================
+    // 初始化 K 線圖
+    // ==========================================
+
     function initializeChart() {
 
         const chartElement = document.getElementById("chart");
 
         chart = LightweightCharts.createChart(chartElement, {
+
             width: chartElement.clientWidth,
             height: chartElement.clientHeight,
 
@@ -215,6 +233,10 @@
                 }
             },
 
+            crosshair: {
+                mode: LightweightCharts.CrosshairMode.Normal
+            },
+
             timeScale: {
                 timeVisible: true,
                 borderColor: "#2a2e39"
@@ -226,98 +248,238 @@
         });
 
         candleSeries = chart.addCandlestickSeries({
+
             upColor: "#26a69a",
             downColor: "#ef5350",
+
             borderUpColor: "#26a69a",
             borderDownColor: "#ef5350",
+
             wickUpColor: "#26a69a",
             wickDownColor: "#ef5350"
+
         });
 
-        // 視窗大小改變時，調整圖表尺寸
+
+        // 自動調整圖表大小
         const resizeObserver = new ResizeObserver(() => {
-            chart.applyOptions({
-                width: chartElement.clientWidth,
-                height: chartElement.clientHeight
-            });
+
+            const width = chartElement.clientWidth;
+            const height = chartElement.clientHeight;
+
+            if (width > 0 && height > 0) {
+
+                chart.applyOptions({
+                    width: width,
+                    height: height
+                });
+
+            }
+
         });
 
         resizeObserver.observe(chartElement);
+
     }
 
 
-    // 取得 API 資料（支援 DRF 分頁）
+    // ==========================================
+    // 取得 DRF 所有分頁資料
+    // ==========================================
+
     async function fetchAllKlines() {
 
-        let url = API_URL + "?interval=1d";
-        let results = [];
+        let url = `${API_URL}?interval=${encodeURIComponent(INTERVAL)}`;
+
+        const results = [];
+
+        const visitedUrls = new Set();
+
+        let page = 1;
 
         while (url) {
+
+            // 防止 API next URL 意外形成循環
+            if (visitedUrls.has(url)) {
+                throw new Error("Pagination URL loop detected.");
+            }
+
+            visitedUrls.add(url);
+
+            console.log(`Fetching Kline page ${page}...`);
 
             const response = await fetch(url);
 
             if (!response.ok) {
-                throw new Error("API request failed: " + response.status);
+
+                throw new Error(
+                    `API request failed: ${response.status}`
+                );
+
             }
 
             const data = await response.json();
 
-            // DRF 分頁格式：{ results: [...], next: "..." }
+            // 相容未分頁 API
             if (Array.isArray(data)) {
-                results = results.concat(data);
+
+                results.push(...data);
                 url = null;
+
             } else {
-                results = results.concat(data.results || []);
+
+                const pageResults = Array.isArray(data.results)
+                    ? data.results
+                    : [];
+
+                results.push(...pageResults);
+
                 url = data.next;
+
             }
+
+            page++;
+
         }
 
+        console.log("Kline loading completed:", results.length);
+
         return results;
+
     }
 
 
-    // 整理左側幣種清單
-    function renderCoinList() {
+    // ==========================================
+    // 整理及驗證 K 線資料
+    // ==========================================
 
-        const coinMap = {};
+    function normalizeKlines(rawKlines) {
 
-        allKlines.forEach(kline => {
+        const grouped = {};
 
-            if (!coinMap[kline.symbol]) {
-                coinMap[kline.symbol] = [];
+        rawKlines.forEach(kline => {
+
+            if (!kline || !kline.symbol || !kline.open_time) {
+                return;
             }
 
-            coinMap[kline.symbol].push(kline);
+            const timestamp = Math.floor(
+                new Date(kline.open_time).getTime() / 1000
+            );
+
+            const open = Number(kline.open_price);
+            const high = Number(kline.high_price);
+            const low = Number(kline.low_price);
+            const close = Number(kline.close_price);
+
+            // 排除無效時間及價格
+            if (!Number.isFinite(timestamp) || timestamp <= 0) {
+                return;
+            }
+
+            if (
+                !Number.isFinite(open) ||
+                !Number.isFinite(high) ||
+                !Number.isFinite(low) ||
+                !Number.isFinite(close)
+            ) {
+                return;
+            }
+
+            // 排除不合理的 OHLC 組合
+            if (
+                high < low ||
+                high < Math.max(open, close) ||
+                low > Math.min(open, close)
+            ) {
+                return;
+            }
+
+            const symbol = kline.symbol;
+
+            if (!grouped[symbol]) {
+                grouped[symbol] = new Map();
+            }
+
+            // 使用 timestamp 作為 key，避免重複時間
+            grouped[symbol].set(timestamp, {
+
+                time: timestamp,
+                open: open,
+                high: high,
+                low: low,
+                close: close
+
+            });
+
         });
+
+
+        // 每個幣種各自依時間由舊到新排序
+        const normalized = {};
+
+        Object.keys(grouped).forEach(symbol => {
+
+            normalized[symbol] = Array.from(
+                grouped[symbol].values()
+            ).sort((a, b) => a.time - b.time);
+
+        });
+
+        return normalized;
+
+    }
+
+
+    // ==========================================
+    // 更新左側幣種清單
+    // ==========================================
+
+    function renderCoinList() {
 
         const coinList = document.getElementById("coin-list");
 
         coinList.innerHTML = "";
 
-        const symbols = Object.keys(coinMap).sort();
+        const symbols = Object.keys(coinData).sort();
+
+        if (symbols.length === 0) {
+
+            coinList.innerHTML =
+                '<div class="status">No valid Kline data available.</div>';
+
+            return;
+
+        }
+
 
         symbols.forEach(symbol => {
 
-            const klines = coinMap[symbol];
+            const klines = coinData[symbol];
 
-            // 依照時間排序，最新的放最後
-            klines.sort((a, b) =>
-                new Date(a.open_time) - new Date(b.open_time)
-            );
+            if (!klines || klines.length === 0) {
+                return;
+            }
 
             const latest = klines[klines.length - 1];
-            const previous = klines[klines.length - 2];
 
-            const price = Number(latest.close_price);
+            const previous = klines.length >= 2
+                ? klines[klines.length - 2]
+                : null;
+
+            const price = latest.close;
 
             let change = null;
 
-            if (previous && Number(previous.close_price) !== 0) {
+            if (previous && previous.close !== 0) {
+
                 change = (
-                    (price - Number(previous.close_price))
-                    / Number(previous.close_price)
+                    (latest.close - previous.close)
+                    / previous.close
                 ) * 100;
+
             }
+
 
             const item = document.createElement("div");
 
@@ -327,109 +489,196 @@
                 item.classList.add("active");
             }
 
-            const changeClass =
-                change === null ? "" :
-                change >= 0 ? "positive" : "negative";
 
-            item.innerHTML = `
-                <div>
-                    <div class="coin-symbol">${symbol}</div>
-                </div>
+            const left = document.createElement("div");
 
-                <div>
-                    <div class="coin-price">
-                        ${price.toLocaleString("en-US", {
-                            maximumFractionDigits: 8
-                        })}
-                    </div>
+            const symbolElement = document.createElement("div");
 
-                    <div class="coin-change ${changeClass}">
-                        ${change === null ? "--" :
-                            (change >= 0 ? "+" : "") +
-                            change.toFixed(2) + "%"
-                        }
-                    </div>
-                </div>
-            `;
+            symbolElement.className = "coin-symbol";
+            symbolElement.textContent = symbol;
+
+            left.appendChild(symbolElement);
+
+
+            const right = document.createElement("div");
+
+            const priceElement = document.createElement("div");
+
+            priceElement.className = "coin-price";
+
+            priceElement.textContent = price.toLocaleString("en-US", {
+                maximumFractionDigits: 8
+            });
+
+
+            const changeElement = document.createElement("div");
+
+            changeElement.className = "coin-change";
+
+            if (change === null) {
+
+                changeElement.textContent = "--";
+
+            } else {
+
+                changeElement.textContent =
+                    (change >= 0 ? "+" : "") +
+                    change.toFixed(2) + "%";
+
+                changeElement.classList.add(
+                    change >= 0 ? "positive" : "negative"
+                );
+
+            }
+
+
+            right.appendChild(priceElement);
+            right.appendChild(changeElement);
+
+            item.appendChild(left);
+            item.appendChild(right);
+
 
             item.addEventListener("click", () => {
                 selectCoin(symbol);
             });
 
+
             coinList.appendChild(item);
+
         });
 
-        // 預設選擇第一個幣種
-        if (!selectedSymbol && symbols.length > 0) {
-            selectCoin(symbols[0]);
-        }
     }
 
 
+    // ==========================================
     // 選擇幣種並更新 K 線圖
+    // ==========================================
+
     function selectCoin(symbol) {
+
+        const selectedKlines = coinData[symbol];
+
+        if (!selectedKlines || selectedKlines.length === 0) {
+            console.warn("No Kline data for:", symbol);
+            return;
+        }
 
         selectedSymbol = symbol;
 
         document.getElementById("chart-title").textContent = symbol;
 
-        const selectedKlines = allKlines
-            .filter(kline => kline.symbol === symbol)
-            .sort((a, b) =>
-                new Date(a.open_time) - new Date(b.open_time)
-            );
 
-        const candleData = selectedKlines.map(kline => {
+        // 再次確保時間順序及資料格式正確
+        const candleData = selectedKlines
+            .filter(kline => {
 
-            return {
-                time: Math.floor(
-                    new Date(kline.open_time).getTime() / 1000
-                ),
+                return (
+                    Number.isInteger(kline.time) &&
+                    Number.isFinite(kline.open) &&
+                    Number.isFinite(kline.high) &&
+                    Number.isFinite(kline.low) &&
+                    Number.isFinite(kline.close)
+                );
 
-                open: Number(kline.open_price),
-                high: Number(kline.high_price),
-                low: Number(kline.low_price),
-                close: Number(kline.close_price)
-            };
+            })
+            .sort((a, b) => a.time - b.time);
 
-        });
 
+        if (candleData.length === 0) {
+
+            console.warn("No valid candles for:", symbol);
+
+            candleSeries.setData([]);
+
+            return;
+
+        }
+
+
+        // Lightweight Charts 要求 time 嚴格遞增
         candleSeries.setData(candleData);
 
         chart.timeScale().fitContent();
 
         renderCoinList();
+
     }
 
 
-    // 啟動
+    // ==========================================
+    // 啟動應用程式
+    // ==========================================
+
     async function startApp() {
 
         try {
 
             initializeChart();
 
+            document.getElementById("coin-list").innerHTML =
+                '<div class="status">Loading market data...</div>';
+
+
+            // 取得所有分頁
             allKlines = await fetchAllKlines();
 
+
             if (allKlines.length === 0) {
+
                 document.getElementById("coin-list").innerHTML =
                     '<div class="status">No Kline data available.</div>';
 
                 return;
+
             }
 
+
+            // 整理資料
+            coinData = normalizeKlines(allKlines);
+
+
+            console.log("Raw Klines:", allKlines.length);
+
+            console.log(
+                "Valid symbols:",
+                Object.keys(coinData).length
+            );
+
+            console.log(
+                "Valid candles:",
+                Object.values(coinData).reduce(
+                    (total, klines) => total + klines.length,
+                    0
+                )
+            );
+
+
+            // 顯示幣種清單
             renderCoinList();
+
+
+            // 預設選擇第一個幣種
+            const symbols = Object.keys(coinData).sort();
+
+            if (symbols.length > 0) {
+                selectCoin(symbols[0]);
+            }
+
 
         } catch (error) {
 
-            console.error(error);
+            console.error("Failed to start Crypto Market:", error);
 
             document.getElementById("coin-list").innerHTML =
-                '<div class="status">Failed to load market data.</div>';
+                '<div class="status">Failed to load market data. Please check the API.</div>';
+
         }
+
     }
 
 
+    // 啟動
     startApp();
 
 </script>

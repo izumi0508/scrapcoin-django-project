@@ -48,7 +48,7 @@ class CryptoKline(models.Model):
     volume = models.DecimalField(max_digits = 20, decimal_places = 8)
 
     class Meta:
-        ordering = ["symbol", "-open_time"]
+        ordering = ["symbol", "interval", "-open_time", "-id"]
 
         indexes = [
             models.Index(fields=["symbol", "interval", "open_time"]),

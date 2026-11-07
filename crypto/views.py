@@ -30,7 +30,7 @@ class CryptoKlineListView(generics.ListAPIView):
     filterset_fields = ['symbol','interval']
 
     ordering_fields = ['open_time', 'close_price', 'volume']
-    ordering = ['-open_time']
+    ordering = ['-open_time', '-id']
 
 def crypto_dashboard(request):
 

@@ -19,7 +19,8 @@ Testing
 - Django Test Framework
 
 Deployment
-- Docker（進行中）
+- Docker
+- Render
 
 ## 功能
 
@@ -39,19 +40,23 @@ Deployment
 
 ✅ API Test
 
-🚧 Docker
+✅ Docker
 
 🚧 Scheduler
 
-🚧 Deployment
+✅ Deployment
 
 ## API
+[GET] /api/v1/klines/?symbol=&ordering=
 
 ## 如何安裝
 
 
 
 ## 如何使用
+啟動伺服器
+docker compose up
+
 建立資料表
 docker compose exec web python manage.py migrate
 
@@ -63,6 +68,9 @@ docker compose exec web python manage.py seed_watchlist
 
 依照WatchList更新最近一筆K線
 docker compose exec web python manage.py fetch_kline
+
+依照WatchList更新最近500筆K線
+docker compose exec web python manage.py init_kline
 
 跑測試
 docker compose exec web python manage.py test
@@ -98,7 +106,7 @@ scrapcoin/
 
 [✓] Testing
 
-[ ] Docker
+[✓] Docker
 
 [ ] Scheduler
 
@@ -110,6 +118,6 @@ scrapcoin/
 
 [ ] Deploy
 
-[ ] Frontend Dashboard
+[✓] Frontend Dashboard
 
 ## Author
